@@ -1,4 +1,6 @@
 
+QoS = {}
+
 local limit = tonumber(minetest.settings:get("curl_parallel_limit")) or 8
 
 if limit < 2 then
@@ -18,13 +20,13 @@ local qsizes = {
 }
 
 local timeouts = {
-	tonumber(minetest.settings:get("qos.max_timeout.1")) or 30,
-	tonumber(minetest.settings:get("qos.max_timeout.2")) or 6,
-	tonumber(minetest.settings:get("qos.max_timeout.3")) or 4,
+	tonumber(minetest.settings:get("qos.max_timeout.1")) or 5,
+	tonumber(minetest.settings:get("qos.max_timeout.2")) or 3,
+	tonumber(minetest.settings:get("qos.max_timeout.3")) or 2,
 }
 
 local limits = {
-	limit * math.ceil(qsizes[1] / 2), -- Forces pushing high priority requests to engine queue
+	limit * 4, -- Forces pushing high priority requests to engine queue
 	math.floor(limit * 0.8), -- Keep at least 20% of internal queue available for high priority requests
 	math.floor(limit * 0.5), -- Keep at least 50% of internal queue available for normal + high priority requests
 }
@@ -32,8 +34,16 @@ local limits = {
 -- Queues for priority 1, 2 and 3
 local queues = { Queue(qsizes[1]), Queue(qsizes[2]), Queue(qsizes[3]) }
 
+-- Dropped requests never to be seen again, something is terribly wrong if there's even single request recorded here
+QoS.drop = {0,0,0}
+local drop = QoS.drop
+
 function queues:push(priority, value)
-	return self[priority]:push(value)
+	local success = self[priority]:push(value)
+	if not success then
+		drop[priority] = drop[priority] + 1
+	end
+	return success
 end
 
 function queues:pop(priority)
@@ -52,19 +62,61 @@ end
 
 local rc = 0
 
-function QoS(http_api, default_priority)
+function QoS.queue_length(priority)
+	if priority then
+		return queues[priority].count
+	end
+	local count = 0
+	for i=1,#queues do
+		count = count + queues[i].count
+	end
+	return count
+end
+
+function QoS.active_requests()
+	return rc
+end
+
+function QoS.active_utilization()
+	return rc > 0 and (rc / limit * 100) or 0
+end
+
+function QoS.queue_size(priority)
+	if priority then
+		return qsizes[priority]
+	end
+	local size = 0
+	for i=1,#qsizes do
+		size = size + qsizes[i]
+	end
+	return size
+end
+
+function QoS.utilization(priority)
+	local count = priority and queues[priority].count or QoS.queue_length()
+	local size = priority and qsizes[priority] or QoS.queue_size()
+	return count > 0 and (count / size * 100) or 0
+end
+
+local function QoS_wrapper(_, http_api, default_priority)
 	if http_api then
 		-- Each API instance gets isolated api and future request handles
 		local priority = default_priority or 3
+		local max_timeout = timeouts[priority]
 		local api = http_api
 		local handle_index = 0
 		local handles = {}
 		local obj = {}
 
+		local function get_timeout(timeout, priority_override)
+			-- Timeout for connection in seconds. Engine default is 3 seconds.
+			return math.min(timeout or 3, priority_override and timeouts[priority_override] or max_timeout)
+		end
+
 		-- TODO: Optimize to handle full queue at once if more than single response is available
-		local function fetch(req, callback)
+		local function fetch(req, callback, priority_override)
 			rc = rc + 1
-			req.timeout = math.min(req.timeout, timeouts[priority])
+			req.timeout = get_timeout(req.timeout, priority_override)
 			local handle = api.fetch_async(req)
 			local function update_http_status()
 				local res = api.fetch_async_get(handle)
@@ -80,7 +132,7 @@ function QoS(http_api, default_priority)
 
 		local function fetch_async(req, index, priority_override)
 			rc = rc + 1
-			req.timeout = timeouts[priority_override or priority]
+			req.timeout = get_timeout(req.timeout, priority_override)
 			handles[index] = api.fetch_async(req)
 		end
 
@@ -90,11 +142,12 @@ function QoS(http_api, default_priority)
 				-- Execute request directly when below limits
 				return fetch_async(req, p)
 			end
-			-- Reserve future handle and queue request when above limits
+			-- Reserve future handle and queue request when above limits, if queues are full return nothing
 			handle_index = handle_index + 1
-			handles[handle_index] = true
-			queues:push(p, function() local index = handle_index; fetch_async(req, index, p) end)
-			return handle_index
+			if queues:push(p, function() local index = handle_index; fetch_async(req, index, p) end) then
+				handles[handle_index] = true
+				return handle_index
+			end
 		end
 
 		function obj.fetch_async_get(handle)
@@ -124,7 +177,7 @@ function QoS(http_api, default_priority)
 			local p = priority_override or priority
 			if rc < limits[p] then
 				-- Execute request when below limits
-				fetch(req, callback)
+				fetch(req, callback, priority_override)
 			else
 				-- Queue request when above limits
 				--print("QoS control queueing request for", minetest.get_current_modname(), req.url)
@@ -138,7 +191,8 @@ function QoS(http_api, default_priority)
 		print("QoS control HTTP API request failed for " .. minetest.get_current_modname())
 	end
 end
-qos = QoS
+
+setmetatable(QoS, { __call = QoS_wrapper })
 
 minetest.register_globalstep(function()
 	if rc < limits[1] then queues:execute(1) else return end

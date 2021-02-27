@@ -35,4 +35,24 @@ will be handled first and lower priorities only if there's still free slots for 
 
 ### Extras
 
-QoS provides `priority` as last argument for HTTP API functions, this can be used to override default priority.
+#### Minetest HTTP API
+
+QoS provides `priority_override` as last argument for HTTP API functions, this can be used to override default priority.
+
+* **`http.fetch(req, callback, priority_override)`**
+  If no `priority_override` provided then one given to `QoS(http_api, priority)` initialization function is used.
+* **`http.fetch_async(req, priority_override)`**
+  If no `priority_override` provided then one given to `QoS(http_api, priority)` initialization function is used.
+
+#### Monitoring functions:
+
+* **`QoS.queue_length(priority)`**
+  Return total number of queued requests by priority. If priority not given then return sum of all priorities.
+* **`QoS.active_requests()`**
+  Return total number of active executed but not yet finished requests.
+* **`QoS.active_utilization()`**
+  Return % utilization of engine request queue.
+* **`QoS.queue_size(priority)`**
+  Return % utilization of engine request queue.
+* **`QoS.utilization(priority)`**
+  Return % utilization of queue by priority. If priority not given then aggregate utilization of all queues is returned.
