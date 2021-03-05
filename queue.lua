@@ -33,6 +33,12 @@ function Queue:pop()
 end
 --]]
 
+function Queue:clear()
+	self.count = 0
+	self.first = 1
+	self.last = 1
+end
+
 -- With Lua 5.1 __len is not called for tables.
 function Queue:__len()
 	return self.count
