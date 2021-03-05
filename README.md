@@ -1,6 +1,6 @@
 ![luacheck](https://github.com/S-S-X/qos/workflows/luacheck/badge.svg)
 ![mineunit](https://github.com/S-S-X/qos/workflows/mineunit/badge.svg)
-![](https://byob.yarr.is/S-S-X/qos/coverage)
+![coverage](https://mineunit-badges.000webhostapp.com/S-S-X/qos/coverage)
 
 ## Minetest HTTP API QoS control queue
 
@@ -53,6 +53,6 @@ QoS provides `priority_override` as last argument for HTTP API functions, this c
 * **`QoS.active_utilization()`**
   Return % utilization of engine request queue.
 * **`QoS.queue_size(priority)`**
-  Return % utilization of engine request queue.
+  Return size of QoS request queue.
 * **`QoS.utilization(priority)`**
   Return % utilization of queue by priority. If priority not given then aggregate utilization of all queues is returned.
