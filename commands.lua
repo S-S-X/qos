@@ -38,17 +38,17 @@ minetest.register_chatcommand("qos:clear", {
 	description = "Return current QoS queue utilization percentage value",
 	privs = { [QoS.config("admin_priv")] = true },
 	func = function(name, priority)
-		if priority:find("%S") then
+		if priority and priority:find("%S") then
 			local i = tonumber(priority)
 			if i and QoS.data.queues[i] then
-				local length = QoS.data.queues[i]
+				local length = QoS.data.queues[i].count
 				QoS.data.queues[i]:clear()
 				minetest.chat_send_player(name, ("QoS cleared %d priority %d entries"):format(length, i))
 			else
 				minetest.chat_send_player(name, "QoS clear: invalid priority, double check your input")
 			end
 		else
-			for i, queue in ipairs() do
+			for i, queue in ipairs(QoS.data.queues) do
 				local length = queue.count
 				queue:clear()
 				minetest.chat_send_player(name, ("QoS cleared %d priority %d entries"):format(length, i))
