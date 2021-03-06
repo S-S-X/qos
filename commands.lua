@@ -19,7 +19,7 @@ minetest.register_chatcommand("qos:active_requests", {
 minetest.register_chatcommand("qos:active_utilization", {
 	description = "Return current QoS active requests utilization  percentage value",
 	privs = { [QoS.config("info_priv")] = true },
-	func = function(name, priority)
+	func = function(name)
 		minetest.chat_send_player(name, ("QoS active utilization: %d%%"):format(QoS.active_utilization()))
 	end
 })

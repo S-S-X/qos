@@ -83,6 +83,9 @@ local function QoS_wrapper(_, http_api, default_priority)
 		local handle_index = 0
 		local handles = {}
 		local obj = {}
+		-- Functions
+		local fetch
+		local fetch_async
 
 		local function get_timeout(timeout, priority_override)
 			-- Timeout for connection in seconds. Engine default is 3 seconds.
@@ -91,7 +94,7 @@ local function QoS_wrapper(_, http_api, default_priority)
 
 		if QoS.config("enforce_timeouts") then
 			-- TODO: Optimize to handle full queue at once if more than single response is available
-			local function fetch(req, callback, priority_override)
+			function fetch(req, callback, priority_override)
 				rc = rc + 1
 				req.timeout = get_timeout(req.timeout, priority_override)
 				local handle = api.fetch_async(req)
@@ -107,14 +110,14 @@ local function QoS_wrapper(_, http_api, default_priority)
 				core.after(0, update_http_status)
 			end
 
-			local function fetch_async(req, index, priority_override)
+			function fetch_async(req, index, priority_override)
 				rc = rc + 1
 				req.timeout = get_timeout(req.timeout, priority_override)
 				handles[index] = api.fetch_async(req)
 			end
 		else
 			-- TODO: Optimize to handle full queue at once if more than single response is available
-			local function fetch(req, callback, priority_override)
+			function fetch(req, callback)
 				rc = rc + 1
 				local handle = api.fetch_async(req)
 				local function update_http_status()
@@ -129,7 +132,7 @@ local function QoS_wrapper(_, http_api, default_priority)
 				core.after(0, update_http_status)
 			end
 
-			local function fetch_async(req, index, priority_override)
+			function fetch_async(req, index)
 				rc = rc + 1
 				handles[index] = api.fetch_async(req)
 			end
