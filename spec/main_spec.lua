@@ -8,6 +8,16 @@ mineunit("common/chatcommands")
 
 sourcefile("init")
 
+-- Patch spy.on method, see https://github.com/Olivine-Labs/luassert/pull/174
+function spy.on(target_table, target_key)
+	local s = spy.new(target_table[target_key])
+	rawset(target_table, target_key, s)
+	-- store original data
+	s.target_table = target_table
+	s.target_key = target_key
+	return s
+end
+
 describe("QoS wrapped HTTP API", function()
 
 	setup(function()
@@ -22,7 +32,7 @@ describe("QoS wrapped HTTP API", function()
 
 	it("wraps fetch for supplied object", function()
 		local http = minetest.request_http_api()
-		qos_http = QoS(http, 2)
+		local qos_http = QoS(http, 2)
 
 		local checkpoint = spy.new(function(data)
 			-- HTTP response table gets through QoS
@@ -35,6 +45,30 @@ describe("QoS wrapped HTTP API", function()
 
 		-- checkpoint was called once, minetest default handler was not called
 		assert.spy(checkpoint).was.called(1)
+		assert.spy(http.fetch).was.called(0)
+	end)
+
+	it("pushes requests to QoS queue", function()
+		local http = minetest.request_http_api()
+		local qos_http = QoS(http, 2)
+
+		local checkpoint = spy.new(function(data)
+			-- HTTP response table gets through QoS
+			assert.is_hashed(data)
+		end)
+		spy.on(http, "fetch")
+		spy.on(QoS.data.queues[2], "push")
+
+		-- Create 30 fetch requests, curl_parallel_limit = 12 (fixtures/minetest.cfg)
+		for i=1,30 do qos_http.fetch({ url = "http://127.0.0.1/" }, checkpoint) end
+
+		mineunit:execute_globalstep()
+
+		-- checkpoint was called 9 times (at most 80% of curl_parallel_limit)
+		assert.spy(checkpoint).was.called(9)
+		-- priority 2 queue push was called 21 times: total 30 - executed 9 = queued 21
+		assert.spy(QoS.data.queues[2].push).was.called(21)
+		-- minetest default handler was not called
 		assert.spy(http.fetch).was.called(0)
 	end)
 

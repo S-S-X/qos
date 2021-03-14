@@ -104,6 +104,21 @@ describe("Queue", function()
 		assert.equals(q.count, 0)
 	end)
 
+	it("clears queue", function()
+		q:push(1)
+		q:push(2)
+		q:push(3)
+		q:push(4)
+		assert.equals(q.count, q.size)
+		-- Clear queue
+		q:clear()
+		-- Check that queue is empty
+		assert.equals(q.count, 0)
+		assert.is_nil(q:pop())
+		-- And size is not changed
+		assert.equals(q.size, 4)
+	end)
+
 end)
 
 describe("Queue direct access", function()
