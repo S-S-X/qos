@@ -18,6 +18,10 @@ describe("Queue initialization", function()
 		spy.on(minetest, "chat_send_player")
 		func("SX", "1")
 		assert.spy(minetest.chat_send_player).was.called(1)
+
+		spy.on(minetest, "chat_send_player")
+		func("SX", "not valid number")
+		assert.spy(minetest.chat_send_player).was.called(1)
 	end)
 
 	it("executes qos:active_requests", function()
@@ -46,6 +50,10 @@ describe("Queue initialization", function()
 		spy.on(minetest, "chat_send_player")
 		func("SX", "1")
 		assert.spy(minetest.chat_send_player).was.called(1)
+
+		spy.on(minetest, "chat_send_player")
+		func("SX", "not valid number")
+		assert.spy(minetest.chat_send_player).was.called(1)
 	end)
 
 	it("executes qos:clear", function()
@@ -57,6 +65,10 @@ describe("Queue initialization", function()
 
 		spy.on(minetest, "chat_send_player")
 		func("SX", "1")
+		assert.spy(minetest.chat_send_player).was.called(1)
+
+		spy.on(minetest, "chat_send_player")
+		func("SX", "not valid number")
 		assert.spy(minetest.chat_send_player).was.called(1)
 	end)
 
