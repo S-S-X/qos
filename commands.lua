@@ -35,7 +35,7 @@ minetest.register_chatcommand("qos:utilization", {
 
 minetest.register_chatcommand("qos:clear", {
 	params = "[priority]",
-	description = "Return current QoS queue utilization percentage value",
+	description = "Clear QoS queues by priority, clear all queues if piority not given",
 	privs = { [QoS.config("admin_priv")] = true },
 	func = function(name, priority)
 		if priority and priority:find("%S") then
