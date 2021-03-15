@@ -112,9 +112,9 @@ QoS provides `priority_override` as last argument for HTTP API functions, this c
   Return current QoS queue length.
 * **`/qos:active_requests`**
   Return number of active requests executed with QoS controller.
-* **`qos:active_utilization`**
+* **`/qos:active_utilization`**
   Return current QoS active requests utilization  percentage value.
-* **`qos:utilization [priority]`**
+* **`/qos:utilization [priority]`**
   Return current QoS queue utilization percentage value.
-* **`qos:clear [priority]`**
+* **`/qos:clear [priority]`**
   Return current QoS queue utilization percentage value.
