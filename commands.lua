@@ -29,7 +29,8 @@ minetest.register_chatcommand("qos:queue_length", {
 			for i,_ in ipairs(QoS.data.queues) do
 				table.insert(rows, (" %s %d%%"):format(align(i, 8), QoS.utilization(i)))
 			end
-			minetest.chat_send_player(name, ("QoS queue lengths:\n%s"):format(table.concat(rows, "\n")))
+			local total = QoS.queue_length()
+			minetest.chat_send_player(name, ("QoS queue length %d in:\n%s"):format(total, table.concat(rows, "\n")))
 		end
 	end
 })
@@ -65,7 +66,10 @@ minetest.register_chatcommand("qos:utilization", {
 			for i,_ in ipairs(QoS.data.queues) do
 				table.insert(rows, (" %s %d%%"):format(align(i, 8), QoS.utilization(i)))
 			end
-			minetest.chat_send_player(name, ("QoS queue utilization:\n%s"):format(table.concat(rows, "\n")))
+			local total = QoS.utilization()
+			minetest.chat_send_player(name, ("QoS queue utilization %d%% in:\n%s")
+				:format(total, table.concat(rows, "\n"))
+			)
 		end
 	end
 })
