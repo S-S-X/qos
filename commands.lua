@@ -15,7 +15,7 @@ local function align(s, w)
 end
 
 minetest.register_chatcommand("qos:queue_length", {
-	params = "[priority]",
+	params = "[<priority>]",
 	description = "Return current QoS queue length",
 	privs = { [QoS.config("info_priv")] = true },
 	func = function(name, priority)
@@ -51,7 +51,7 @@ minetest.register_chatcommand("qos:active_utilization", {
 })
 
 minetest.register_chatcommand("qos:utilization", {
-	params = "[priority]",
+	params = "[<priority>]",
 	description = "Return current QoS queue utilization percentage value",
 	privs = { [QoS.config("info_priv")] = true },
 	func = function(name, priority)
@@ -71,7 +71,7 @@ minetest.register_chatcommand("qos:utilization", {
 })
 
 minetest.register_chatcommand("qos:clear", {
-	params = "priority",
+	params = "<priority>|all",
 	description = "Clear QoS queues by priority, clear all queues if piority is 'all'",
 	privs = { [QoS.config("admin_priv")] = true },
 	func = function(name, priority)
