@@ -116,5 +116,5 @@ QoS provides `priority_override` as last argument for HTTP API functions, this c
   Return current QoS active requests utilization  percentage value.
 * **`/qos:utilization [priority]`**
   Return current QoS queue utilization percentage value.
-* **`/qos:clear [priority]`**
-  Return current QoS queue utilization percentage value.
+* **`/qos:clear <priority>|all`**
+  Clears selected or all queues. All queued requests are gone for good.
