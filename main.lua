@@ -115,6 +115,7 @@ local function QoS_wrapper(_, http_api, default_priority)
 				rc = rc + 1
 				req.timeout = get_timeout(req.timeout, priority_override)
 				handles[index] = api.fetch_async(req)
+				return index
 			end
 		else
 			-- TODO: Optimize to handle full queue at once if more than single response is available
@@ -136,21 +137,24 @@ local function QoS_wrapper(_, http_api, default_priority)
 			function fetch_async(req, index)
 				rc = rc + 1
 				handles[index] = api.fetch_async(req)
+				return index
 			end
 		end
 
 		function obj.fetch_async(req, priority_override)
-			local p = priority_override or priority
-			if rc < limits[p] then
-				-- Execute request directly when below limits
-				return fetch_async(req, p)
-			end
-			-- Reserve future handle and queue request when above limits, if queues are full return nothing
+			-- Reserve future handle
 			handle_index = handle_index + 1
-			if queues:push(p, function() local index = handle_index; fetch_async(req, index, p) end) then
+			local p = priority_override or priority
+			-- Check queue limits for selected priority
+			if rc < limits[p] then
+				-- Execute request directly
+				return fetch_async(req, handle_index, p)
+			elseif queues:push(p, function() local index = handle_index; fetch_async(req, index, p) end) then
+				-- Queue request
 				handles[handle_index] = true
 				return handle_index
 			end
+			-- Queues are full, return nothing. Request failed and will not be executed ever.
 		end
 
 		function obj.fetch_async_get(handle)
@@ -159,21 +163,15 @@ local function QoS_wrapper(_, http_api, default_priority)
 				-- This request is queued and not yet executed
 				return {}
 			elseif real_handle then
-				-- This request was queued and handle should
+				-- This request was queued
 				local res = api.fetch_async_get(real_handle)
 				if res.completed then
 					rc = rc - 1
 					handles[handle] = nil
 				end
 				return res
-			else
-				-- This request was never queued and uses handle provided by engine
-				local res = api.fetch_async_get(handle)
-				if res.completed then
-					rc = rc - 1
-				end
-				return res
 			end
+			error("QoS fetch_async_get invalid handle")
 		end
 
 		function obj.fetch(req, callback, priority_override)
