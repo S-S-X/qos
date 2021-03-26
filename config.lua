@@ -45,9 +45,11 @@ function QoS.config(key)
 	return value
 end
 
+-- Main runtime configuration storage
 local config = {
 
 	curl_parallel_limit = curl_parallel_limit,
+	http_mods = {},
 
 	qsizes = {
 		QoS.config("queue_size.1"),
@@ -68,5 +70,15 @@ local config = {
 	},
 
 }
+
+-- Collect and store list of secure.http_mods
+do
+	-- https://github.com/minetest/minetest/blob/master/src/content/mods.h#L34 @ 471e567
+	-- #define MODNAME_ALLOWED_CHARS "abcdefghijklmnopqrstuvwxyz0123456789_"
+	local http_mods = minetest.settings:get("secure.http_mods") or ""
+	for modname in http_mods:gmatch("[a-z0-9_]+") do
+		config.http_mods[modname] = true
+	end
+end
 
 return config

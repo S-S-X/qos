@@ -8,16 +8,6 @@ mineunit("common/chatcommands")
 
 sourcefile("init")
 
--- Patch spy.on method, see https://github.com/Olivine-Labs/luassert/pull/174
-function spy.on(target_table, target_key)
-	local s = spy.new(target_table[target_key])
-	rawset(target_table, target_key, s)
-	-- store original data
-	s.target_table = target_table
-	s.target_key = target_key
-	return s
-end
-
 describe("QoS wrapped HTTP API", function()
 
 	setup(function()

@@ -14,6 +14,15 @@ local function align(s, w)
 	return s .. string.rep(' ', w - #s)
 end
 
+local function bypassed_mods_warning(name)
+	if #QoS.http_mods_bypass > 0 then
+		local msg = "Warning, not all mods wrapped with QoS. Stats might be inaccurate.\n" ..
+			"Following mods have access but not wrapped with QoS handler:\n %s"
+		local modlist = table.concat(QoS.http_mods_bypass, ", ")
+		minetest.chat_send_player(name, msg:format(modlist))
+	end
+end
+
 minetest.register_chatcommand("qos:queue_length", {
 	params = "[<priority>]",
 	description = "Return current QoS queue length",
@@ -39,6 +48,7 @@ minetest.register_chatcommand("qos:active_requests", {
 	description = "Return number of active requests executed with QoS controller",
 	privs = { [QoS.config("info_priv")] = true },
 	func = function(name)
+		bypassed_mods_warning(name)
 		minetest.chat_send_player(name, ("QoS active requests: %d"):format(QoS.active_requests()))
 	end
 })
@@ -47,6 +57,7 @@ minetest.register_chatcommand("qos:active_utilization", {
 	description = "Return current QoS active requests utilization  percentage value",
 	privs = { [QoS.config("info_priv")] = true },
 	func = function(name)
+		bypassed_mods_warning(name)
 		minetest.chat_send_player(name, ("QoS active utilization: %d%%"):format(QoS.active_utilization()))
 	end
 })
