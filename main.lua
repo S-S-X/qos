@@ -75,6 +75,7 @@ function QoS.utilization(priority)
 end
 
 local function QoS_wrapper(_, http_api, default_priority)
+	local modname = minetest.get_current_modname()
 	if http_api then
 		-- Each API instance gets isolated api and future request handles
 		local priority = default_priority or 3
@@ -187,10 +188,11 @@ local function QoS_wrapper(_, http_api, default_priority)
 			end
 		end
 
-		print("QoS control enabled for " .. minetest.get_current_modname())
+		print("QoS control enabled for " .. modname)
+		QoS.http_mods_enabled[modname] = true
 		return obj
 	else
-		print("QoS control HTTP API request failed for " .. minetest.get_current_modname())
+		print("QoS control HTTP API request failed for " .. modname)
 	end
 end
 

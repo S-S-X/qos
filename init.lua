@@ -3,6 +3,10 @@ local modpath = minetest.get_modpath("qos")
 
 QoS = {
 	modpath = modpath,
+	-- List of mods wrapped with QoS
+	http_mods_enabled = {},
+	-- List of mods not wrapped with QoS
+	http_mods_bypass = {},
 	data = {},
 }
 
@@ -19,3 +23,11 @@ if QoS.config("register_chatcommands") then
 end
 
 dofile(modpath .. "/main.lua")
+
+minetest.register_on_mods_loaded(function()
+	for modname in pairs(QoS._config.http_mods) do
+		if not QoS.http_mods_enabled[modname] then
+			table.insert(QoS.http_mods_bypass, modname)
+		end
+	end
+end)
