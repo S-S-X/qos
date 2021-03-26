@@ -3,80 +3,64 @@ require("mineunit")
 mineunit("core")
 
 mineunit("common/chatcommands")
+mineunit("server")
+mineunit("player")
 
 sourcefile("init")
 
--- Patch spy.on method, see https://github.com/Olivine-Labs/luassert/pull/174
-function spy.on(target_table, target_key)
-	local s = spy.new(target_table[target_key])
-	rawset(target_table, target_key, s)
-	-- store original data
-	s.target_table = target_table
-	s.target_key = target_key
-	return s
-end
-
 describe("Queue initialization", function()
 
+	local SX = Player("SX", { basic_privs = true })
+
 	it("executes qos:queue_length", function()
-		local func = minetest.registered_chatcommands["qos:queue_length"].func
-
 		spy.on(minetest, "chat_send_player")
-		func("SX")
+		SX:send_chat_message("/qos:queue_length")
 		assert.spy(minetest.chat_send_player).was.called(1)
 
 		spy.on(minetest, "chat_send_player")
-		func("SX", "1")
+		SX:send_chat_message("/qos:queue_length 1")
 		assert.spy(minetest.chat_send_player).was.called(1)
 
 		spy.on(minetest, "chat_send_player")
-		func("SX", "5")
+		SX:send_chat_message("/qos:queue_length 5")
 		assert.spy(minetest.chat_send_player).was.called(1)
 
 		spy.on(minetest, "chat_send_player")
-		func("SX", "not valid number")
+		SX:send_chat_message("/qos:queue_length not valid number")
 		assert.spy(minetest.chat_send_player).was.called(1)
 	end)
 
 	it("executes qos:active_requests", function()
-		local func = minetest.registered_chatcommands["qos:active_requests"].func
-
 		spy.on(minetest, "chat_send_player")
-		func("SX")
+		SX:send_chat_message("/qos:active_requests")
 		assert.spy(minetest.chat_send_player).was.called(1)
 	end)
 
 	it("executes qos:active_utilization", function()
-		local func = minetest.registered_chatcommands["qos:active_utilization"].func
-
 		spy.on(minetest, "chat_send_player")
-		func("SX")
+		SX:send_chat_message("/qos:active_utilization")
 		assert.spy(minetest.chat_send_player).was.called(1)
 	end)
 
 	it("executes qos:utilization", function()
-		local func = minetest.registered_chatcommands["qos:utilization"].func
-
 		spy.on(minetest, "chat_send_player")
-		func("SX")
+		SX:send_chat_message("/qos:utilization")
 		assert.spy(minetest.chat_send_player).was.called(1)
 
 		spy.on(minetest, "chat_send_player")
-		func("SX", "1")
+		SX:send_chat_message("/qos:utilization 1")
 		assert.spy(minetest.chat_send_player).was.called(1)
 
 		spy.on(minetest, "chat_send_player")
-		func("SX", "5")
+		SX:send_chat_message("/qos:utilization 5")
 		assert.spy(minetest.chat_send_player).was.called(1)
 
 		spy.on(minetest, "chat_send_player")
-		func("SX", "not valid number")
+		SX:send_chat_message("/qos:utilization not valid number")
 		assert.spy(minetest.chat_send_player).was.called(1)
 	end)
 
 	describe("qos:clear", function()
-
-		local func = minetest.registered_chatcommands["qos:clear"].func
 		local function spy_on_queues_clear()
 			spy.on(QoS.data.queues[1], "clear")
 			spy.on(QoS.data.queues[2], "clear")
@@ -86,7 +70,7 @@ describe("Queue initialization", function()
 		it("clears all queues", function()
 			spy.on(minetest, "chat_send_player")
 			spy_on_queues_clear()
-			func("SX", "all")
+			SX:send_chat_message("/qos:clear all")
 			assert.spy(minetest.chat_send_player).was.called(3)
 			assert.spy(QoS.data.queues[1].clear).was.called(1)
 			assert.spy(QoS.data.queues[2].clear).was.called(1)
@@ -96,7 +80,7 @@ describe("Queue initialization", function()
 		it("clears selected queue", function()
 			spy.on(minetest, "chat_send_player")
 			spy_on_queues_clear()
-			func("SX", "1")
+			SX:send_chat_message("/qos:clear 1")
 			assert.spy(minetest.chat_send_player).was.called(1)
 			assert.spy(QoS.data.queues[1].clear).was.called(1)
 			assert.spy(QoS.data.queues[2].clear).was.called(0)
@@ -106,7 +90,7 @@ describe("Queue initialization", function()
 		it("does not attempt clearing nonexistent queue", function()
 			spy.on(minetest, "chat_send_player")
 			spy_on_queues_clear()
-			func("SX", "5")
+			SX:send_chat_message("/qos:clear 5")
 			assert.spy(minetest.chat_send_player).was.called(1)
 			assert.spy(QoS.data.queues[1].clear).was.called(0)
 			assert.spy(QoS.data.queues[2].clear).was.called(0)
@@ -116,7 +100,7 @@ describe("Queue initialization", function()
 		it("does not clear with invalid arguments", function()
 			spy.on(minetest, "chat_send_player")
 			spy_on_queues_clear()
-			func("SX", "not valid number")
+			SX:send_chat_message("/qos:clear not valid number")
 			assert.spy(minetest.chat_send_player).was.called(1)
 			assert.spy(QoS.data.queues[1].clear).was.called(0)
 			assert.spy(QoS.data.queues[2].clear).was.called(0)
@@ -126,7 +110,7 @@ describe("Queue initialization", function()
 		it("does not clear with empty arguments", function()
 			spy.on(minetest, "chat_send_player")
 			spy_on_queues_clear()
-			func("SX")
+			SX:send_chat_message("/qos:clear")
 			assert.spy(minetest.chat_send_player).was.called(1)
 			assert.spy(QoS.data.queues[1].clear).was.called(0)
 			assert.spy(QoS.data.queues[2].clear).was.called(0)
