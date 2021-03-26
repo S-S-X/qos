@@ -1,6 +1,6 @@
 
 local function get_priority(priority)
-	if priority then
+	if priority and priority ~= "" then
 		priority = tonumber(priority)
 		if priority and QoS.data.queues[priority] then
 			return priority
@@ -27,7 +27,7 @@ minetest.register_chatcommand("qos:queue_length", {
 		else
 			local rows = {}
 			for i,_ in ipairs(QoS.data.queues) do
-				table.insert(rows, (" %s %d%%"):format(align(i, 8), QoS.utilization(i)))
+				table.insert(rows, (" %s %d%%"):format(align(i, 8), QoS.queue_length(i)))
 			end
 			local total = QoS.queue_length()
 			minetest.chat_send_player(name, ("QoS queue length %d in:\n%s"):format(total, table.concat(rows, "\n")))
