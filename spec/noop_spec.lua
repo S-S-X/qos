@@ -9,7 +9,7 @@ describe("Mod noop initialization", function()
 	setup(function()
 		-- Replace configuration file
 		core_settings = core_settings or core.settings
-		core.settings = Settings("minetest_noop.cfg")
+		core.settings = Settings("minetest_noop.conf")
 	end)
 
 	teardown(function()
