@@ -15,12 +15,12 @@ Simply wrap `minetest.request_http_api` with `QoS` and you're good to go.
 ```lua
 local http = minetest.request_http_api()
 
-http = QoS and QoS(http, 2) or http
+http = minetest.get_modpath("qos") and QoS(http, 2) or http
 ```
 
 or alternative if you like:
 ```lua
-local http = QoS and QoS(minetest.request_http_api(), 2) or minetest.request_http_api()
+local http = minetest.get_modpath("qos") and QoS(minetest.request_http_api(), 2) or minetest.request_http_api()
 ```
 
 ### Priorities
