@@ -1,0 +1,8 @@
+name: minecheck
+on: [push, pull_request]
+jobs:
+  minecheck:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: S-S-X/minecheck@master
