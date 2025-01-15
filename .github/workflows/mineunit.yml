@@ -1,13 +1,56 @@
-
 name: mineunit
 
 on: [push, pull_request]
 
 jobs:
-  build:
+  mineunit:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: mt-mods/mineunit-actions@badger
+
+    - id: mineunit
+      uses: mt-mods/mineunit-actions@master
       with:
-        badge-secret: ${{ secrets.MineunitBadgesAPIKey }}
+        badge-label: Test coverage
+
+    - uses: RubbaBoy/BYOB@v1.3.0
+      if: success() && github.event_name == 'push' && github.ref == 'refs/heads/master'
+      with:
+        NAME: "${{ steps.mineunit.outputs.badge-name }}"
+        LABEL: "${{ steps.mineunit.outputs.badge-label }}"
+        STATUS: "${{ steps.mineunit.outputs.badge-status }}"
+        COLOR: "${{ steps.mineunit.outputs.badge-color }}"
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - uses: KeisukeYamashita/create-comment@v1
+      if: success() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+      with:
+        check-only-first-line: true
+        comment: |
+          <details><summary><i>Click for detailed source code test coverage report</i></summary>
+          
+          ### Mineunit test coverage is ${{ steps.mineunit.outputs.coverage-total }} in ${{ steps.mineunit.outputs.coverage-files }} files:
+          ```
+          File                                      Hits Missed Coverage
+          --------------------------------------------------------------
+          ${{ steps.mineunit.outputs.mineunit-report }}
+          ```
+          
+          ### Mineunit test logs:
+          ```
+          ${{ steps.mineunit.outputs.mineunit-stdout }}
+          ```
+          </details>
+
+    - uses: KeisukeYamashita/create-comment@v1
+      if: failure() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+      with:
+        check-only-first-line: true
+        comment: |
+          <details><summary><i>Mineunit tests failed, click for details</i></summary>
+          
+          ### Mineunit test logs:
+          ```
+          ${{ steps.mineunit.outputs.mineunit-stdout }}
+          ```
+          </details>

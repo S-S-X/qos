@@ -1,6 +1,6 @@
 ![luacheck](https://github.com/S-S-X/qos/workflows/luacheck/badge.svg)
 ![mineunit](https://github.com/S-S-X/qos/workflows/mineunit/badge.svg)
-![coverage](https://mineunit-badges.000webhostapp.com/S-S-X/qos/coverage)
+![coverage](https://byob.yarr.is/S-S-X/qos/coverage)
 [![ContentDB](https://content.minetest.net/packages/-SX-/qos/shields/downloads/)](https://content.minetest.net/packages/-SX-/qos/)
 
 ## Minetest HTTP API QoS control queue
